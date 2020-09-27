@@ -41,7 +41,7 @@ void setRouteKey(T_MQ_Conn_Info *mqConnInfo, char *routeKey);
 int exchangeDeclare(T_MQ_Conn_Info *mqConnInfo);
 int declareQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue);
 int declareQueueAndBindQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue);
-int recvMsg(T_MQ_Conn_Info *mqConnInfo, char **msg);
+int recvMsgFromMQ(T_MQ_Conn_Info *mqConnInfo, char **msg);
 
 
 

@@ -221,7 +221,7 @@ int declareQueueAndBindQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue)
     return 0;
 }
 
-int recvMsg(T_MQ_Conn_Info *mqConnInfo, char **msg)
+int recvMsgFromMQ(T_MQ_Conn_Info *mqConnInfo, char **msg)
 {
     amqp_rpc_reply_t res;
     amqp_envelope_t envelope;
