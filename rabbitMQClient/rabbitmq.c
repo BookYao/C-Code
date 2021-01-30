@@ -15,7 +15,7 @@ void mqConnInfoBuild(T_MQ_Conn_Info *mqConnInfo, T_MQ_Conf_Info *confInfo)
 T_MQ_Conn_Info *initMQConn(T_MQ_Conf_Info *confInfo)
 {
     if (!confInfo) {
-        //PrintMsgTrace("%s.%d. initMQConn Param error!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. initMQConn Param error!", __FUNCTION__, __LINE__);
         return NULL;
     }
 
@@ -25,7 +25,7 @@ T_MQ_Conn_Info *initMQConn(T_MQ_Conf_Info *confInfo)
 
     T_MQ_Conn_Info *mqConnInfo = (T_MQ_Conn_Info *)malloc(sizeof(T_MQ_Conn_Info));
     if (!mqConnInfo) {
-        //PrintMsgTrace("%s.%d. initMQConn Malloc Failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. initMQConn Malloc Failed!", __FUNCTION__, __LINE__);
         return NULL;
     }
 
@@ -33,7 +33,7 @@ T_MQ_Conn_Info *initMQConn(T_MQ_Conf_Info *confInfo)
     mqConnInfo->conn = amqp_new_connection();
     if (mqConnInfo->conn == NULL)
     {
-        //PrintMsgTrace("%s.%d. amqp_new_connection Failed", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_new_connection Failed", __FUNCTION__, __LINE__);
         free(mqConnInfo);
         return NULL;
     }
@@ -42,7 +42,7 @@ T_MQ_Conn_Info *initMQConn(T_MQ_Conf_Info *confInfo)
     
     socket = amqp_tcp_socket_new(mqConnInfo->conn);
     if (!socket) {
-        //PrintMsgTrace("%s.%d. amqp_tcp_socket_new failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_tcp_socket_new failed!", __FUNCTION__, __LINE__);
         amqp_destroy_connection(mqConnInfo->conn);
         free(mqConnInfo);
         return NULL;
@@ -50,7 +50,7 @@ T_MQ_Conn_Info *initMQConn(T_MQ_Conf_Info *confInfo)
     
     status = amqp_socket_open(socket, confInfo->host, confInfo->port);
     if (status) {
-        //PrintMsgTrace("%s.%d. amqp_socket_open failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_socket_open failed!", __FUNCTION__, __LINE__);
         amqp_connection_close(mqConnInfo->conn, AMQP_REPLY_SUCCESS);
         amqp_destroy_connection(mqConnInfo->conn);
         free(mqConnInfo);
@@ -89,10 +89,12 @@ void destoryMQConn(T_MQ_Conn_Info *mqConnInfo)
 int publishMsg(T_MQ_Conn_Info *mqConnInfo, char *msg)
 {
     if (!mqConnInfo || !msg || !msg[0]) {
-        //PrintMsgTrace("%s.%d. publishMsg Param error!", __FUNCTION__, __LINE__);
+        printf("%s.%d. publishMsg Param error!", __FUNCTION__, __LINE__);
         return -1;
     }
     
+	int ret = -1;
+	printf("%s.%d. Publish Message:%s\n", __FUNCTION__, __LINE__, msg);
     amqp_basic_properties_t props;
     amqp_rpc_reply_t x;
     props._flags = AMQP_BASIC_DELIVERY_MODE_FLAG;
@@ -100,7 +102,7 @@ int publishMsg(T_MQ_Conn_Info *mqConnInfo, char *msg)
     props.expiration = amqp_cstring_bytes("5");
     
     if (mqConnInfo->conn) {
-        amqp_basic_publish(mqConnInfo->conn,
+        ret = amqp_basic_publish(mqConnInfo->conn,
                 mqConnInfo->channelid,
                 amqp_cstring_bytes(mqConnInfo->exchange),
                 amqp_cstring_bytes(mqConnInfo->routeKey),
@@ -108,9 +110,10 @@ int publishMsg(T_MQ_Conn_Info *mqConnInfo, char *msg)
                 0,
                 &props,
                 amqp_cstring_bytes(msg));
+		printf("%s.%d, publish msg return string:%s\n", __FUNCTION__, __LINE__, amqp_error_string2(ret));
         x = amqp_get_rpc_reply(mqConnInfo->conn);
         if (x.reply_type != AMQP_RESPONSE_NORMAL) {
-            //PrintMsgTrace("%s.%d. publishMsg Param error!", __FUNCTION__, __LINE__);
+            printf("%s.%d. publishMsg Param error!", __FUNCTION__, __LINE__);
             return -1;
         }
     } 
@@ -121,7 +124,7 @@ int publishMsg(T_MQ_Conn_Info *mqConnInfo, char *msg)
 void setExchange(T_MQ_Conn_Info *mqConnInfo, char *exchange, char *exchangeType)
 {
     if (!mqConnInfo) {
-        //PrintMsgTrace("%s.%d. setExchange Param error!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. setExchange Param error!", __FUNCTION__, __LINE__);
         return ;
     }
 
@@ -132,7 +135,7 @@ void setExchange(T_MQ_Conn_Info *mqConnInfo, char *exchange, char *exchangeType)
 void setRouteKey(T_MQ_Conn_Info *mqConnInfo, char *routeKey)
 {
     if (!mqConnInfo) {
-        //PrintMsgTrace("%s.%d. setExchange Param error!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. setExchange Param error!", __FUNCTION__, __LINE__);
         return ;
     }
     strncpy(mqConnInfo->routeKey, routeKey, sizeof(mqConnInfo->routeKey) - 1);   
@@ -141,7 +144,7 @@ void setRouteKey(T_MQ_Conn_Info *mqConnInfo, char *routeKey)
 int exchangeDeclare(T_MQ_Conn_Info *mqConnInfo)
 {
     if (mqConnInfo == NULL) {
-        //PrintMsgTrace("%s.%d. exchangeDeclare Param error!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. exchangeDeclare Param error!", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -152,7 +155,7 @@ int exchangeDeclare(T_MQ_Conn_Info *mqConnInfo)
                             0, 0, 0, 0, amqp_empty_table);
     x = amqp_get_rpc_reply(mqConnInfo->conn);
     if (x.reply_type != AMQP_RESPONSE_NORMAL ) {
-        //PrintMsgTrace("%s.%d. amqp_exchange_declare failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_exchange_declare failed!", __FUNCTION__, __LINE__);
         return -1;
     }
     return 0;
@@ -168,7 +171,7 @@ int exchangeDeclare(T_MQ_Conn_Info *mqConnInfo)
 int declareQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue)
 {
     if (mqConnInfo == NULL) {
-        //PrintMsgTrace("%s.%d. declareQueue Param error!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. declareQueue Param error!", __FUNCTION__, __LINE__);
         return -1;
     }
     
@@ -179,7 +182,7 @@ int declareQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue)
                                                     0, 1, 0, 0, amqp_empty_table);
     x = amqp_get_rpc_reply(mqConnInfo->conn);
     if (x.reply_type != AMQP_RESPONSE_NORMAL) {
-        //PrintMsgTrace("%s.%d. amqp_queue_declare failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_queue_declare failed!", __FUNCTION__, __LINE__);
         return -1;
     }
     return 0;
@@ -188,7 +191,7 @@ int declareQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue)
 int declareQueueAndBindQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue)
 {
     if (mqConnInfo == NULL) {
-        //PrintMsgTrace("%s.%d. declareQueueAndBindQueue Param error!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. declareQueueAndBindQueue Param error!", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -199,7 +202,7 @@ int declareQueueAndBindQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue)
                                                     0, 1, 0, 0, amqp_empty_table);
     x = amqp_get_rpc_reply(mqConnInfo->conn);
     if (x.reply_type != AMQP_RESPONSE_NORMAL) {
-        //PrintMsgTrace("%s.%d. amqp_queue_declare failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_queue_declare failed!", __FUNCTION__, __LINE__);
         return -1;
     }
     
@@ -207,14 +210,14 @@ int declareQueueAndBindQueue(T_MQ_Conn_Info *mqConnInfo, char const *queue)
                     amqp_cstring_bytes(mqConnInfo->exchange),
                     amqp_cstring_bytes(mqConnInfo->routeKey), amqp_empty_table);
     if (x.reply_type != AMQP_RESPONSE_NORMAL) {
-        //PrintMsgTrace("%s.%d. amqp_queue_bind failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_queue_bind failed!", __FUNCTION__, __LINE__);
         return -1;
     }
     
     amqp_basic_consume(mqConnInfo->conn, mqConnInfo->channelid,  amqp_cstring_bytes(queue), 
                         amqp_empty_bytes, 0, 1, 0, amqp_empty_table); //use no_ack mode.
     if (x.reply_type != AMQP_RESPONSE_NORMAL) {
-        //PrintMsgTrace("%s.%d. amqp_basic_consume failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_basic_consume failed!", __FUNCTION__, __LINE__);
         return -1;
     }
     
@@ -253,7 +256,7 @@ int recvMsgFromMQ(T_MQ_Conn_Info *mqConnInfo, char **msg)
      */
     res = amqp_consume_message(mqConnInfo->conn, &envelope, NULL, 0);
     if (AMQP_RESPONSE_NORMAL != res.reply_type) {
-        //PrintMsgTrace("%s.%d. amqp_consume_message failed!", __FUNCTION__, __LINE__);
+        //printf("%s.%d. amqp_consume_message failed!", __FUNCTION__, __LINE__);
         return -1;
     }
 
