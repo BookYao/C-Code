@@ -34,7 +34,6 @@ int main(int argc, char const *const *argv) {
 		return -1;
 	}
     
-    //setExchange(connInfo, "amq.fanout", "fanout");
     setExchange(connInfo, "groupExc", "topic");
     setRouteKey(connInfo, "group.#");   
     declareQueue(connInfo, argv[3]);
